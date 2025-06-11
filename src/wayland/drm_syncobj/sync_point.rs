@@ -115,20 +115,25 @@ pub struct DrmSyncPoint {
 impl DrmSyncPoint {
     /// Create an eventfd that will be signaled by the syncpoint
     pub fn eventfd(&self) -> io::Result<Arc<OwnedFd>> {
-        let fd = rustix::event::eventfd(
-            0,
-            rustix::event::EventfdFlags::CLOEXEC | rustix::event::EventfdFlags::NONBLOCK,
-        )?;
-        let mut ctx = self.timeline.0.dev_ctx.lock().unwrap();
-        ctx.device
-            .upgrade()
-            .ok_or::<io::Error>(io::ErrorKind::InvalidInput.into())?
-            .syncobj_eventfd(ctx.syncobj, self.point, fd.as_fd(), false)?;
+        #[cfg(not(target_os = "openbsd"))]
+        {
+            let fd = rustix::event::eventfd(
+                0,
+                rustix::event::EventfdFlags::CLOEXEC | rustix::event::EventfdFlags::NONBLOCK,
+            )?;
+            let mut ctx = self.timeline.0.dev_ctx.lock().unwrap();
+            ctx.device
+                .upgrade()
+                .ok_or::<io::Error>(io::ErrorKind::InvalidInput.into())?
+                .syncobj_eventfd(ctx.syncobj, self.point, fd.as_fd(), false)?;
 
-        let fd = Arc::new(fd);
-        ctx.event_fds.retain(|(_, fd)| fd.upgrade().is_some());
-        ctx.event_fds.push((self.point, Arc::downgrade(&fd)));
-        Ok(fd)
+            let fd = Arc::new(fd);
+            ctx.event_fds.retain(|(_, fd)| fd.upgrade().is_some());
+            ctx.event_fds.push((self.point, Arc::downgrade(&fd)));
+            Ok(fd)
+        }
+        #[cfg(target_os = "openbsd")]
+        Err(io::Error::other("oh no!"))
     }
 
     /// Signal the sync point.

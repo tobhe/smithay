@@ -144,8 +144,13 @@ pub mod egl {
     use libloading::Library;
     use std::sync::{LazyLock, Once};
 
+    #[cfg(not(target_os = "openbsd"))]
     pub static LIB: LazyLock<Library> =
         LazyLock::new(|| unsafe { Library::new("libEGL.so.1") }.expect("Failed to load LibEGL"));
+
+    #[cfg(target_os = "openbsd")]
+    pub static LIB: LazyLock<Library> =
+        LazyLock::new(|| unsafe { Library::new("libEGL.so.2.0") }.expect("Failed to load LibEGL"));
 
     pub static LOAD: Once = Once::new();
     pub static DEBUG: Once = Once::new();
