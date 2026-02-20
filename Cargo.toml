@@ -142,3 +142,9 @@ harness = false
 [profile.release-with-debug]
 inherits = "release"
 debug = true
+
+[patch.crates-io]
+drm = { path = "../drm-rs-9221a172245d5aa6406c7938174b00fb85e5f6b4"}
+drm-ffi = { path = "../drm-rs-9221a172245d5aa6406c7938174b00fb85e5f6b4/drm-ffi" }
+drm-sys = { path = "../drm-rs-9221a172245d5aa6406c7938174b00fb85e5f6b4/drm-ffi/drm-sys" }
+polling = { path = "../polling-e838a159551ccbdc7a4c39a51fa36430615f8d34" }
